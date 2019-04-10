@@ -13,5 +13,10 @@ namespace EcommercePayment.Pages.Payment
         {
 
         }
+
+        public IActionResult onPost(string test)
+        {
+            return RedirectToPage("Contact");
+        }
     }
 }

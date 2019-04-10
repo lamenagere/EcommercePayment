@@ -8,7 +8,8 @@
 
 
 <div class="container">
-    <div class="row">
+    <form id="paymentForm" class="row">
+        @Html.AntiForgeryToken()
         <div class="col-xs-12 col-md-4 col-md-offset-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -23,7 +24,7 @@
                             <div class="col-xs-12">
                                 <div class="form-group">
                                     <label>CARD NUMBER</label>
-                                        <input id="ccCode" type="tel" class="form-control" placeholder="Valid Card Number" />
+                                    <input id="ccCode" type="tel" class="form-control" placeholder="Valid Card Number" />
                                 </div>
                             </div>
                         </div>
@@ -37,7 +38,7 @@
                             <div class="col-xs-5 col-md-5 pull-right">
                                 <div class="form-group">
                                     <label>CV CODE</label>
-                                    <input type="tel" class="form-control" placeholder="CVC" />
+                                    <input id="cvCode" type="tel" class="form-control" placeholder="CVC" />
                                 </div>
                             </div>
                         </div>
@@ -45,7 +46,7 @@
                             <div class="col-xs-12">
                                 <div class="form-group">
                                     <label>CARD OWNER</label>
-                                    <input type="text" class="form-control" placeholder="Card Owner Names" />
+                                    <input id="cardOwner" type="text" class="form-control" placeholder="Card Owner Names" />
                                 </div>
                             </div>
                         </div>
@@ -54,11 +55,16 @@
                 <div class="panel-footer">
                     <div class="row">
                         <div class="col-xs-12">
-                            <button type="submit" class="btn btn-warning btn-lg btn-block">Process payment</button>
+                            <button id="submitPayment" type="submit" class="btn btn-warning btn-lg btn-block">Process payment</button>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </form>
+    <div id="loaderWrapper">
+        <div class="row">
+            <div class="loader"></div>
         </div>
     </div>
 </div>
@@ -68,41 +74,88 @@
         margin: 0 auto;
     }
 </style>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
-<script type="text/javascript" src="~/js/creditcard.js"></script>
-<script>
-    var obj = new CreditCard();
 
-    $(document).ready(function () {
-        $('#ccCode').on('input', function () {
-            let validation = $('#ccCodeValidation');
-            if (!validation.length) {
-                $(this).parent().append('<label id="ccCodeValidation" class="text-danger">Please check your credit card number</label>');
-            }
-            $('#ccCodeValidation').toggle(!obj.isValid($(this).val()));
+@section Scripts
+    {
+    <link href="~/css/loader.css" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" src="~/js/creditcard.js"></script>
+    <script>
+        var obj = new CreditCard();
+
+        $(document).ready(function () {
+            $('#ccCode').on('input', function () {
+                let validation = $('#ccCodeValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="ccCodeValidation" class="text-danger">Please check your credit card number</label>');
+                }
+                $('#ccCodeValidation').toggle(!obj.isValid($(this).val()));
+            });
+
+            $('#expiration').on('input', function () {
+                let validation = $('#expirationValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="expirationValidation" class="text-danger">Please check your credit card expiration date</label>');
+                }
+                let value = $(this).val().split('/');
+
+                if (value === null) {
+                    $('#expirationValidation').toggle(true);
+                    return;
+                }
+                if (value[1].length === 2) value[1] = '20' + value[1];
+                $('#expirationValidation').toggle(!obj.isExpirationDateValid(value[0], value[1]));
+            });
+
+            $('#cvCode').on('input', function () {
+                let validation = $('#cvCodeValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cvCodeValidation" class="text-danger">Please check your security code</label>');
+                }
+                $('#cvCodeValidation').toggle(!obj.isSecurityCodeValid($('#ccCodeValidation').val(), $(this).val()));
+            });
+
+            $('#cardOwner').on('input', function () {
+                let validation = $('#cardOwnerValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cardOwnerValidation" class="text-danger">Please enter the name of the credit card owner</label>');
+                }
+                $('#cardOwnerValidation').toggle(!$(this).val());
+            });
+
+            $('#loaderWrapper').hide();
+            $('#paymentForm').submit(function (event) {
+
+                event.preventDefault();
+                let $form = $(this);
+                let data = $form.find("#ccCode").val();
+
+                $('#paymentForm').toggle(false);
+                $('#loaderWrapper').toggle(true);
+                setTimeout(function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Payment/Payment",
+                        data: JSON.stringify(data),
+                        contentType: "application/json",
+                        dataType: "json",
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("XSRF-TOKEN",
+                                $('input:hidden[name="__RequestVerificationToken"]').val());
+                        }
+                    });
+                }, 1500);
+            });
         });
-        $('#expiration').on('input', function () {
-            let validation = $('#expirationValidation');
-            if (!validation.length) {
-                $(this).parent().append('<label id="expirationValidation" class="text-danger">Please check your credit card expiration date</label>');
-            }
-            let value = $(this).val().split('/');
-
-            if (value === null) 
-            {
-                $('#expirationValidation').toggle(true);
-                return;
-            }
-            if (value[1].length === 2) value[1] = '20' + value[1];
-            $('#expirationValidation').toggle(!obj.isExpirationDateValid(value[0], value[1]));
-        });
-    });
 
 
-    //obj.isValid('4916108926268679'); // returns true
-    //obj.isExpirationDateValid('02', '2020'); // returns true
-    //obj.isSecurityCodeValid('4556603578296676', '250'); // returns true
-    //obj.getCreditCardNameByNumber('4539578763621486'); // returns 'Visa'
-</script>
+                    //obj.isValid('4916108926268679'); // returns true
+                    //obj.isExpirationDateValid('02', '2020'); // returns true
+                    //obj.isSecurityCodeValid('4556603578296676', '250'); // returns true
+                    //obj.getCreditCardNameByNumber('4539578763621486'); // returns 'Visa'
+    </script>
+}
+
