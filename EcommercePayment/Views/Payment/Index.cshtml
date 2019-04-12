@@ -1,0 +1,189 @@
+﻿@model EcommercePayment.Models.PaymentModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<h4>PaymentModel</h4>
+<hr />
+<div class="row">
+    <div class="col">
+        <form asp-action="Index" id="paymentForm" name="paymentForm" class="row">
+            @Html.HiddenFor(m => m.id)
+            <div class="col-xs-12 col-md-4 col-md-offset-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <h3 class="text-center">Amount to pay: @Model.paymentAmount</h3>
+                            <img class="img-responsive cc-img" src="http://www.prepbootstrap.com/Content/images/shared/misc/creditcardicons.png">
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="form-group">
+                                        <label>CARD NUMBER</label>
+                                        <input name="cardNumber" id="cardNumber" type="tel" class="form-control" placeholder="Valid Card Number" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3 col-md-3">
+                                    <div class="form-group">
+                                        <label><span class="hidden-xs">EXPIRATION</span><span class="visible-xs-inline">EXP</span> DATE</label>
+                                        @*<input  />*@
+                                        <select name="expirationMonth" id="expirationMonth" class="form-control">
+                                            @for(int i = 1; i <= 12; i++)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-xs-4 col-md-4">
+                                    <div class="form-group">
+                                        <label><span class="hidden-xs">EXPIRATION</span><span class="visible-xs-inline">EXP</span> DATE</label>
+                                        @*<input name="expirationYear" id="expirationYear" class="form-control" />*@
+                                        <select name="expirationYear" id="expirationYear" class="form-control" >
+                                            @for (int i = (DateTime.Now.Year); i <= (DateTime.Now.AddYears(20).Year); i++)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-xs-5 col-md-5 pull-right">
+                                    <div class="form-group">
+                                        <label>CV CODE</label>
+                                        <input name="cvv" id="cvv" type="tel" class="form-control" placeholder="CVC" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="form-group">
+                                        <label>CARD OWNER</label>
+                                        <input name="cardholderName" id="cardholderName" type="text" class="form-control" placeholder="Card Owner Names" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <button id="submitPayment" type="submit" class="btn btn-warning btn-lg btn-block">Process payment</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div id="loaderWrapper">
+            <div class="row">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <link href="~/css/loader.css" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" src="~/js/creditcard.js"></script>
+    <script>
+        var obj = new CreditCard();
+
+        $(document).ready(function () {
+
+            let $cardNumber = $('#cardNumber');
+            let $expiration = $('#expiration');
+            let $cvv = $('#cvv');
+            let $cardholderName = $('#cardholderName');
+            let $expirationMonth = $('#expirationMonth');
+            let $expirationYear = $('#expirationYear');
+
+            $cardNumber.on('input', function () {
+                let validation = $('#cardNumberValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cardNumberValidation" class="text-danger">Please check your credit card number</label>');
+                }
+                $('#cardNumberValidation').toggle(!obj.isValid($(this).val()));
+            });
+
+            //$expiration.on('input', function () {
+            //    let validation = $('#expirationValidation');
+            //    if (!validation.length) {
+            //        $(this).parent().append('<label id="expirationValidation" class="text-danger">Please check your credit card expiration date</label>');
+            //    }
+            //    let value = $(this).val().split('/');
+
+            //    if (value === null) {
+            //        $('#expirationValidation').toggle(true);
+            //        return;
+            //    }
+            //    if (value[1].length === 2) value[1] = '20' + value[1];
+            //    $('#expirationValidation').toggle(!obj.isExpirationDateValid(value[0], value[1]));
+            //});
+
+            $cvv.on('input', function () {
+                let validation = $('#cvvValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cvvValidation" class="text-danger">Please check your security code</label>');
+                }
+                $('#cvvValidation').toggle(!obj.isSecurityCodeValid($('#cardNumberValidation').val(), $(this).val()));
+            });
+
+            $cardholderName.on('input', function () {
+                let validation = $('#cardholderNameValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cardholderNameValidation" class="text-danger">Please enter the name of the credit card owner</label>');
+                }
+                $('#cardholderNameValidation').toggle(!$(this).val());
+            });
+
+            $('#loaderWrapper').hide();
+            $('#paymentForm').submit(function (event) {
+
+                event.preventDefault();
+
+                $('#paymentForm').toggle(false);
+                $('#loaderWrapper').toggle(true);
+
+                let code = $('input:hidden[name="__RequestVerificationToken"]').val();
+
+                //contruction du modèle
+                var model = {
+                    "id": $('#id').val(),
+                    "cardNumber": $cardNumber.val(),
+                    "validation": $expiration.val(),
+                    "cvv": $cvv.val(),
+                    "cardholderName": $cardholderName.val(),
+                    "expiryDate": ($expirationMonth.val() + '/' + $expirationYear.val()),
+                    //"paymentAmount": @Model.paymentAmount.ToString(CultureInfo.InvariantCulture)
+                };
+
+                setTimeout(function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "https://localhost:44387/Payment",
+                        dataType: "json",
+                        data: JSON.stringify(model),
+                        contentType: 'application/json',
+                        success: function (result) {
+                            window.location = result;
+                        }
+                    });
+                }, 1500);
+            });
+        });
+    </script>
+}
