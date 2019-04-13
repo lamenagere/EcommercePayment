@@ -12,7 +12,7 @@ namespace EcommercePayment.Services
     public class PaymentService
     {
         HttpClient client = new HttpClient();
-        string paymentApiUrl = "https://localhost:44348/api/Payments";
+        string paymentApiUrl = "http://localhost:51675/api/Payments";
 
         public PaymentService()
         {

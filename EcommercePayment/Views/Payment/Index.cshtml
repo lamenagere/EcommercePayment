@@ -119,21 +119,6 @@
                 $('#cardNumberValidation').toggle(!obj.isValid($(this).val()));
             });
 
-            //$expiration.on('input', function () {
-            //    let validation = $('#expirationValidation');
-            //    if (!validation.length) {
-            //        $(this).parent().append('<label id="expirationValidation" class="text-danger">Please check your credit card expiration date</label>');
-            //    }
-            //    let value = $(this).val().split('/');
-
-            //    if (value === null) {
-            //        $('#expirationValidation').toggle(true);
-            //        return;
-            //    }
-            //    if (value[1].length === 2) value[1] = '20' + value[1];
-            //    $('#expirationValidation').toggle(!obj.isExpirationDateValid(value[0], value[1]));
-            //});
-
             $cvv.on('input', function () {
                 let validation = $('#cvvValidation');
                 if (!validation.length) {
@@ -168,7 +153,6 @@
                     "cvv": $cvv.val(),
                     "cardholderName": $cardholderName.val(),
                     "expiryDate": ($expirationMonth.val() + '/' + $expirationYear.val()),
-                    //"paymentAmount": @Model.paymentAmount.ToString(CultureInfo.InvariantCulture)
                 };
 
                 setTimeout(function () {
@@ -178,8 +162,8 @@
                         dataType: "json",
                         data: JSON.stringify(model),
                         contentType: 'application/json',
-                        success: function (result) {
-                            window.location = result;
+                        complete: function (result) {
+                            window.location = result.responseText;
                         }
                     });
                 }, 1500);

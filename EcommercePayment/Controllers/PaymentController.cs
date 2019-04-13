@@ -43,7 +43,7 @@ namespace EcommercePayment.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Index([FromBody]PaymentModel payment) //[FromBody]FormCollection form
+        public async Task<ActionResult> Index([FromBody]PaymentModel payment)
         {
 
             var client = new HttpClient();
@@ -51,7 +51,7 @@ namespace EcommercePayment.Controllers
             var result = await service.ProcessPayment(payment);
 
              //todo:
-            return Content(new string($"{this.Request.Scheme}://{this.Request.Host}/Home?response={result}"));
+            return Ok(new string($"{this.Request.Scheme}://{this.Request.Host}/Home?response={result}"));
         }
 
         // GET: Payment/Details/5

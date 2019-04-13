@@ -138,7 +138,7 @@ namespace EcommercePaymentAPI.Controllers
         {
             if (PaymentExists(payment.Id))
             {
-                if (payment.paymentAmount > 10000)
+                if (_context.Payments.Single(p => p.Id == payment.Id).paymentAmount > 10000)
                 {
                     return CreatedAtAction("GetPayment", new { id = payment.Id }, payment.Id);
                 }
