@@ -12,7 +12,7 @@ namespace EcommercePayment.Services
     public class PaymentService
     {
         HttpClient client = new HttpClient();
-        string paymentApiUrl = "http://localhost:51675/api/Payments";
+        string paymentApiUrl = "https://localhost:44348/api/Payments";
 
         public PaymentService()
         {
@@ -52,6 +52,11 @@ namespace EcommercePayment.Services
 
             HttpResponseMessage result;
             bool resultValidation = false;
+
+            //try
+            //{
+            //    result = await client.
+            //}
 
             try
             {

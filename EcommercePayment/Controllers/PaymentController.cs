@@ -25,7 +25,7 @@ namespace EcommercePayment.Controllers
             service = new PaymentService();
         }
         // GET: Payment
-        public async Task<ActionResult> Index([FromQuery]int paymentId)
+        public async Task<ActionResult> Index([FromQuery]int paymentId, [FromQuery]string returnUrl)
         {
             var payment = new PaymentModel();
             try
@@ -43,15 +43,18 @@ namespace EcommercePayment.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Index([FromBody]PaymentModel payment)
+        public async Task<ActionResult> Index([FromBody]PaymentModel payment, [FromQuery]string returnUrl, [FromQuery]int paymentId)
         {
 
             var client = new HttpClient();
 
             var result = await service.ProcessPayment(payment);
 
-             //todo:
-            return Ok(new string($"{this.Request.Scheme}://{this.Request.Host}/Home?response={result}"));
+            if (result == true)
+            {
+                return RedirectToAction("Validated", routeValues: new { returnUrl = returnUrl });
+            }
+            return RedirectToAction("Rejected");
         }
 
         // GET: Payment/Details/5
@@ -60,6 +63,18 @@ namespace EcommercePayment.Controllers
             return View();
         }
 
-        
+        [HttpGet]
+        public ActionResult Validated(string returnUrl)
+        {
+
+            //ViewBag.returnUrl = returnUrl;
+            return View(model: returnUrl);
+        }
+
+        [HttpGet]
+        public ActionResult Rejected()
+        {
+            return View();
+        }
     }
 }
