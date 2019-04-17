@@ -94,6 +94,7 @@ namespace EcommercePaymentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Payment>> PostPayment(Payment payment)
         {
+            payment.isPaid = false;
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
 
@@ -122,7 +123,7 @@ namespace EcommercePaymentAPI.Controllers
                 _context.Payments.Remove(payment);
                 await _context.SaveChangesAsync();
             }
-            
+
 
             return payment;
         }
@@ -151,9 +152,10 @@ namespace EcommercePaymentAPI.Controllers
                         paymentPromess.cardNumber = payment.cardNumber;
                         paymentPromess.cvv = payment.cvv;
                         paymentPromess.expiryDate = payment.expiryDate;
+                        paymentPromess.isPaid = true;
                         _context.SaveChanges();
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         var result = StatusCode(StatusCodes.Status500InternalServerError, ex);
                         return result;
@@ -165,7 +167,7 @@ namespace EcommercePaymentAPI.Controllers
                     return Unauthorized();
                 }
             }
-            
+
             return NotFound();
         }
 
@@ -177,6 +179,19 @@ namespace EcommercePaymentAPI.Controllers
         private bool PaymentExists(int id)
         {
             return _context.Payments.Any(e => e.Id == id);
+        }
+
+        [HttpGet("check/{id:int}")]
+        public async Task<ActionResult> CheckPayment(int id)
+        {
+            if (PaymentExists(id))
+            {
+                var paymentToCheck = await _context.Payments.FindAsync(id);
+
+                return Ok(paymentToCheck.isPaid);
+            }
+
+            return NotFound();
         }
     }
 }

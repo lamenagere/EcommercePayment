@@ -4,14 +4,16 @@ using EcommercePaymentData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EcommercePaymentData.Migrations
 {
     [DbContext(typeof(PaymentContext))]
-    partial class PaymentContextModelSnapshot : ModelSnapshot
+    [Migration("20190417163620_Ajout_Bool_isPaid")]
+    partial class Ajout_Bool_isPaid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

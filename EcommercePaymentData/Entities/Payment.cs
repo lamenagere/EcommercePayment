@@ -12,5 +12,6 @@ namespace EcommercePaymentData.Entities
         public string cvv { get; set; }
         public DateTime expiryDate { get; set; }
         public float paymentAmount { get; set; }
+        public bool isPaid { get; set; }
     }
 }
