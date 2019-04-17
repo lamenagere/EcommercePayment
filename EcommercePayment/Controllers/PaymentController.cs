@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,18 +33,18 @@ namespace EcommercePayment.Controllers
             {
                 payment = await service.GetPaymentAsync(paymentId);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw;
             }
-            
+
             if (payment == null) return StatusCode(StatusCodes.Status404NotFound);
 
             return View(payment);
         }
 
         [HttpPost]
-        public async Task<ActionResult> Index([FromBody]PaymentModel payment, [FromQuery]string returnUrl, [FromQuery]int paymentId)
+        public async Task<ActionResult> Index(PaymentModel payment, string returnUrl, int paymentId)
         {
 
             var client = new HttpClient();
@@ -52,9 +53,9 @@ namespace EcommercePayment.Controllers
 
             if (result == true)
             {
-                return RedirectToAction("Validated", routeValues: new { returnUrl = returnUrl });
+                return RedirectToAction("Validated", new { returnUrl = returnUrl });
             }
-            return RedirectToAction("Rejected");
+            return RedirectToAction("Rejected", new { returnUrl = returnUrl });
         }
 
         // GET: Payment/Details/5
@@ -63,17 +64,18 @@ namespace EcommercePayment.Controllers
             return View();
         }
 
-        [HttpGet]
+        [HttpGet("validated/{returnUrl}")]
         public ActionResult Validated(string returnUrl)
         {
 
-            //ViewBag.returnUrl = returnUrl;
-            return View(model: returnUrl);
+            ViewBag.returnUrl = WebUtility.UrlDecode(returnUrl);
+            return View();
         }
 
-        [HttpGet]
-        public ActionResult Rejected()
+        [HttpGet("rejected/{returnUrl}")]
+        public ActionResult Rejected(string returnUrl)
         {
+            ViewBag.returnUrl = WebUtility.UrlDecode(returnUrl);
             return View();
         }
     }

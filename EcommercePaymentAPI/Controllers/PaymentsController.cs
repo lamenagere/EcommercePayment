@@ -136,10 +136,28 @@ namespace EcommercePaymentAPI.Controllers
         [Route("process")]
         public ActionResult ProcessPayment(Payment payment)
         {
-            if (PaymentExists(payment.Id))
+            if (ModelState.IsValid && PaymentExists(payment.Id))
             {
-                if (_context.Payments.Single(p => p.Id == payment.Id).paymentAmount > 10000)
+                var paymentPromess = _context.Payments.Single(p => p.Id == payment.Id);
+                if (paymentPromess.paymentAmount == 0)
                 {
+                    return Forbid("The amount of this payment was not registered correctly in the promess... Check the payment promess you previously post to ~/api/payments");
+                }
+                if (paymentPromess.paymentAmount > 10000)
+                {
+                    try
+                    {
+                        paymentPromess.cardholderName = payment.cardholderName;
+                        paymentPromess.cardNumber = payment.cardNumber;
+                        paymentPromess.cvv = payment.cvv;
+                        paymentPromess.expiryDate = payment.expiryDate;
+                        _context.SaveChanges();
+                    }
+                    catch(Exception ex)
+                    {
+                        var result = StatusCode(StatusCodes.Status500InternalServerError, ex);
+                        return result;
+                    }
                     return CreatedAtAction("GetPayment", new { id = payment.Id }, payment.Id);
                 }
                 else
@@ -147,10 +165,8 @@ namespace EcommercePaymentAPI.Controllers
                     return Unauthorized();
                 }
             }
-            else
-            {
-                return NotFound();
-            }
+            
+            return NotFound();
         }
 
         /// <summary>

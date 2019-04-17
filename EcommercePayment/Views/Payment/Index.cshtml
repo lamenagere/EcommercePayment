@@ -10,8 +10,10 @@
 <hr />
 <div class="row">
     <div class="col">
-        <form asp-action="Index" id="paymentForm" name="paymentForm" class="row">
+        <form asp-action="Index" id="paymentForm" name="paymentForm" class="row" method="post" asp-route-returnurl="@Context.Request.Query["returnUrl"].ToString()" asp-route-paymentId="@Context.Request.Query["paymentId"].ToString()">
             @Html.HiddenFor(m => m.id)
+            @*@Html.Hidden("returnUrl", @Context.Request.Query["returnUrl"].ToString())
+            @Html.Hidden("paymentId", @Context.Request.Query["paymentId"].ToString())*@
             <div class="col-xs-12 col-md-4 col-md-offset-4">
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -31,30 +33,14 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3 col-md-3">
+                                <div class="col-xs-7 col-md-7">
                                     <div class="form-group">
                                         <label><span class="hidden-xs">EXPIRATION</span><span class="visible-xs-inline">EXP</span> DATE</label>
-                                        @*<input />*@
-                                        <select name="expirationMonth" id="expirationMonth" class="form-control">
-                                            @for (int i = 1; i <= 12; i++)
-                                            {
-                                            <option value="@i">@i</option>
-                                            }
-                                        </select>
+                                        @*<input id="expiration" type="tel" class="form-control" placeholder="MM / YY" name="expiryDate" />*@
+                                        @Html.TextBoxFor(model => model.expiryDate, "{0:MM/yyyy}", new { @class = "form-control" })
                                     </div>
                                 </div>
-                                <div class="col-xs-4 col-md-4">
-                                    <div class="form-group">
-                                        <label><span class="hidden-xs">EXPIRATION</span><span class="visible-xs-inline">EXP</span> DATE</label>
-                                        @*<input name="expirationYear" id="expirationYear" class="form-control" />*@
-                                        <select name="expirationYear" id="expirationYear" class="form-control">
-                                            @for (int i = (DateTime.Now.Year); i <= (DateTime.Now.AddYears(20).Year); i++)
-                                            {
-                                            <option value="@i">@i</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+
                                 <div class="col-xs-5 col-md-5 pull-right">
                                     <div class="form-group">
                                         <label>CV CODE</label>
@@ -75,7 +61,7 @@
                     <div class="panel-footer">
                         <div class="row">
                             <div class="col-xs-12">
-                                <button id="submitPayment" type="submit" class="btn btn-warning btn-lg btn-block">Process payment</button>
+                                <input id="submit" type="submit" class="btn btn-warning btn-lg btn-block" value="Process payment">
                             </div>
                         </div>
                     </div>
@@ -93,98 +79,98 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
-<link href="~/css/loader.css" rel="stylesheet" />
+    <link href="~/css/loader.css" rel="stylesheet" />
 
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
-<script type="text/javascript" src="~/js/creditcard.js"></script>
-<script>
-    var obj = new CreditCard();
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" src="~/js/creditcard.js"></script>
+    <script>
+        var obj = new CreditCard();
 
-    $(document).ready(function () {
+        $(document).ready(function () {
 
-        let $cardNumber = $('#cardNumber');
-        let $expiration = $('#expiration');
-        let $cvv = $('#cvv');
-        let $cardholderName = $('#cardholderName');
-        let $expirationMonth = $('#expirationMonth');
-        let $expirationYear = $('#expirationYear');
+            let $cardNumber = $('#cardNumber');
+            let $expiration = $('#expiration');
+            let $cvv = $('#cvv');
+            let $cardholderName = $('#cardholderName');
+            let $expirationMonth = $('#expirationMonth');
+            let $expirationYear = $('#expirationYear');
 
-        $cardNumber.on('input', function () {
-            let validation = $('#cardNumberValidation');
-            if (!validation.length) {
-                $(this).parent().append('<label id="cardNumberValidation" class="text-danger">Please check your credit card number</label>');
-            }
-            $('#cardNumberValidation').toggle(!obj.isValid($(this).val()));
+            $cardNumber.on('input', function () {
+                let validation = $('#cardNumberValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cardNumberValidation" class="text-danger">Please check your credit card number</label>');
+                }
+                $('#cardNumberValidation').toggle(!obj.isValid($(this).val()));
+            });
+
+            $cvv.on('input', function () {
+                let validation = $('#cvvValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cvvValidation" class="text-danger">Please check your security code</label>');
+                }
+                $('#cvvValidation').toggle(!obj.isSecurityCodeValid($('#cardNumberValidation').val(), $(this).val()));
+            });
+
+            $cardholderName.on('input', function () {
+                let validation = $('#cardholderNameValidation');
+                if (!validation.length) {
+                    $(this).parent().append('<label id="cardholderNameValidation" class="text-danger">Please enter the name of the credit card owner</label>');
+                }
+                $('#cardholderNameValidation').toggle(!$(this).val());
+            });
+
+            //$('#loaderWrapper').hide();
+            //$('#paymentForm').submit(function (event) {
+
+            //    event.preventDefault();
+
+            //    $('#paymentForm').toggle(false);
+            //    $('#loaderWrapper').toggle(true);
+
+            //    let code = $('input:hidden[name="__RequestVerificationToken"]').val();
+
+            //    //contruction du modèle
+            //    var model = {
+            //        "id": $('#id').val(),
+            //        "cardNumber": $cardNumber.val(),
+            //        "validation": $expiration.val(),
+            //        "cvv": $cvv.val(),
+            //        "cardholderName": $cardholderName.val(),
+            //        "expiryDate": ($expirationMonth.val() + '/' + $expirationYear.val()),
+            //    };
+
+
+
+            //    setTimeout(function () {
+            //        $.ajax({
+            //            type: "POST",
+            //            url: "https://localhost:44387/Payment?" + $.param({ "returnUrl": getUrlParameter('returnUrl') }),
+            //            dataType: "json",
+            //            data: JSON.stringify(model),
+            //            contentType: 'application/json',
+            //            complete: function (result) {
+            //                window.location = result.responseText;
+            //            }
+            //        });
+            //    }, 1500);
+            //});
+
+            //var getUrlParameter = function getUrlParameter(sParam) {
+            //    var sPageURL = window.location.search.substring(1),
+            //        sURLVariables = sPageURL.split('&'),
+            //        sParameterName,
+            //        i;
+
+            //    for (i = 0; i < sURLVariables.length; i++) {
+            //        sParameterName = sURLVariables[i].split('=');
+
+            //        if (sParameterName[0] === sParam) {
+            //            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+            //        }
+            //    }
+            //};
         });
-
-        $cvv.on('input', function () {
-            let validation = $('#cvvValidation');
-            if (!validation.length) {
-                $(this).parent().append('<label id="cvvValidation" class="text-danger">Please check your security code</label>');
-            }
-            $('#cvvValidation').toggle(!obj.isSecurityCodeValid($('#cardNumberValidation').val(), $(this).val()));
-        });
-
-        $cardholderName.on('input', function () {
-            let validation = $('#cardholderNameValidation');
-            if (!validation.length) {
-                $(this).parent().append('<label id="cardholderNameValidation" class="text-danger">Please enter the name of the credit card owner</label>');
-            }
-            $('#cardholderNameValidation').toggle(!$(this).val());
-        });
-
-        $('#loaderWrapper').hide();
-        //$('#paymentForm').submit(function (event) {
-
-        //    event.preventDefault();
-
-        //    $('#paymentForm').toggle(false);
-        //    $('#loaderWrapper').toggle(true);
-
-        //    let code = $('input:hidden[name="__RequestVerificationToken"]').val();
-
-        //    //contruction du modèle
-        //    var model = {
-        //        "id": $('#id').val(),
-        //        "cardNumber": $cardNumber.val(),
-        //        "validation": $expiration.val(),
-        //        "cvv": $cvv.val(),
-        //        "cardholderName": $cardholderName.val(),
-        //        "expiryDate": ($expirationMonth.val() + '/' + $expirationYear.val()),
-        //    };
-
-
-
-        //    setTimeout(function () {
-        //        $.ajax({
-        //            type: "POST",
-        //            url: "https://localhost:44387/Payment?" + $.param({ "returnUrl": getUrlParameter('returnUrl') }),
-        //            dataType: "json",
-        //            data: JSON.stringify(model),
-        //            contentType: 'application/json',
-        //            complete: function (result) {
-        //                window.location = result.responseText;
-        //            }
-        //        });
-        //    }, 1500);
-        //});
-
-        //var getUrlParameter = function getUrlParameter(sParam) {
-        //    var sPageURL = window.location.search.substring(1),
-        //        sURLVariables = sPageURL.split('&'),
-        //        sParameterName,
-        //        i;
-
-        //    for (i = 0; i < sURLVariables.length; i++) {
-        //        sParameterName = sURLVariables[i].split('=');
-
-        //        if (sParameterName[0] === sParam) {
-        //            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
-        //        }
-        //    }
-        //};
-    });
-</script>
+    </script>
 }
