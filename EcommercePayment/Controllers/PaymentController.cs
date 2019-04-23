@@ -26,37 +26,48 @@ namespace EcommercePayment.Controllers
             service = new PaymentService();
         }
         // GET: Payment
-        public async Task<ActionResult> Index([FromQuery]int paymentId, [FromQuery]string returnUrl)
+        public async Task<ActionResult> Index([FromQuery]string paymentId, [FromQuery]string returnUrl)
         {
+            if (string.IsNullOrWhiteSpace(paymentId) || string.IsNullOrWhiteSpace(returnUrl)) return BadRequest();
+
             var payment = new PaymentModel();
             try
             {
                 payment = await service.GetPaymentAsync(paymentId);
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
 
-            if (payment == null) return StatusCode(StatusCodes.Status404NotFound);
+            if (payment.id == 0) return StatusCode(StatusCodes.Status404NotFound);
 
             return View(payment);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Index(PaymentModel payment, string returnUrl)
         {
 
             var client = new HttpClient();
 
+            if (!ModelState.IsValid)
+            {
+                return NotFound();
+            }
+
             var result = await service.ProcessPayment(payment);
+
+            var completePayment = await service.GetPaymentAsync(payment.id);
+
+            // TODO: modifier cette horreur
+            returnUrl += "?paymentId=" + completePayment.guid;
 
             if (result == true)
             {
-                return RedirectToAction("Validated", new { returnUrl = returnUrl });
+                return RedirectToAction("Validated", new { returnUrl = returnUrl});
             }
-            return RedirectToAction("Rejected", new { returnUrl = returnUrl });
+            return RedirectToAction("Rejected", new { returnUrl = returnUrl});
         }
 
         [HttpGet("validated/{returnUrl}")]

@@ -10,6 +10,7 @@ namespace EcommercePayment.Models
     {
         [Required]
         public int id { get; set; }
+        public string guid { get; set; }
         [Required]
         public string cardNumber { get; set; }
         [Required]

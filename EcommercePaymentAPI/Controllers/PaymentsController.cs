@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EcommercePaymentData;
 using EcommercePaymentData.Entities;
+using EcommercePaymentServices;
+using EcommerceCommon;
 
 namespace EcommercePaymentAPI.Controllers
 {
@@ -15,19 +17,21 @@ namespace EcommercePaymentAPI.Controllers
     public class PaymentsController : ControllerBase
     {
         private readonly PaymentContext _context;
+        private readonly IPaymentService service;
 
-        public PaymentsController(PaymentContext context)
+        public PaymentsController(PaymentContext context, IPaymentService service)
         {
             _context = context;
+            this.service = service;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="paymentId"></param>
         /// <returns></returns>
         // GET: api/Payments/5
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Payment>> GetPayment(int id)
         {
             var payment = new Payment();
@@ -49,17 +53,47 @@ namespace EcommercePaymentAPI.Controllers
             return payment;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
+        /// <returns></returns>
+        // GET: api/Payments/1b-0E-.....
+        [HttpGet("{paymentId}")]
+        public async Task<ActionResult<Payment>> GetPayment(string paymentId)
+        {
+            var payment = new Payment();
+
+            try
+            {
+                payment = await _context.Payments.FirstOrDefaultAsync(p => p.guid == paymentId);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            if (payment == null || payment.id == 0)
+            {
+                return NotFound();
+            }
+
+            return payment;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="paymentId"></param>
         /// <param name="payment"></param>
         /// <returns></returns>
         // PUT: api/Payments/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPayment(int id, Payment payment)
+        [HttpPut("{paymentId}")]
+        public async Task<IActionResult> PutPayment(string paymentId, Payment payment)
         {
-            if (id != payment.id)
+            if (paymentId != payment.guid)
             {
                 return BadRequest();
             }
@@ -72,14 +106,7 @@ namespace EcommercePaymentAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!PaymentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return NoContent();
@@ -92,13 +119,24 @@ namespace EcommercePaymentAPI.Controllers
         /// <returns></returns>
         // POST: api/Payments
         [HttpPost]
-        public async Task<ActionResult<Payment>> PostPayment(Payment payment)
+        public async Task<ActionResult<Payment>> PostPayment(PaymentPromessModel paymentPromess)
         {
-            payment.isPaid = false;
+            var payment = new Payment();
+
+            if (paymentPromess.amount == 0)
+                return ValidationProblem();
+            else
+            {
+                payment.paymentAmount = (float)paymentPromess.amount;
+                // TODO: changer le moddèle.guiod de String à Guid
+                payment.guid = service.CreateGuid();
+            }
+
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPayment", new { id = payment.id }, payment.id);
+            Response.Headers.Add(service.BuildGuidHeaders(payment.guid));
+            return CreatedAtAction("GetPayment", new { paymentId = payment.guid }, payment.guid);
         }
 
         /// <summary>
@@ -160,7 +198,7 @@ namespace EcommercePaymentAPI.Controllers
                         var result = StatusCode(StatusCodes.Status500InternalServerError, ex);
                         return result;
                     }
-                    return CreatedAtAction("GetPayment", new { id = payment.id }, payment.id);
+                    return CreatedAtAction("GetPayment", new { paymentId = payment.id }, payment.id);
                 }
                 else
                 {
@@ -181,12 +219,23 @@ namespace EcommercePaymentAPI.Controllers
             return _context.Payments.Any(e => e.id == id);
         }
 
-        [HttpGet("check/{id:int}")]
-        public async Task<ActionResult> CheckPayment(int id)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool PaymentExists(string guid)
         {
-            if (PaymentExists(id))
+            return _context.Payments.Any(e => e.guid == guid);
+        }
+
+        [HttpGet]
+        [Route("check/{paymentId}")]
+        public async Task<ActionResult> CheckPayment(string paymentId)
+        {
+            if (PaymentExists(paymentId))
             {
-                var paymentToCheck = await _context.Payments.FindAsync(id);
+                var paymentToCheck = await _context.Payments.FirstOrDefaultAsync(p => p.guid == paymentId);
 
                 return Ok(paymentToCheck.isPaid);
             }

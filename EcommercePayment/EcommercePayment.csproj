@@ -14,7 +14,13 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\EcommerceCommon\EcommerceCommon.csproj" />
     <ProjectReference Include="..\EcommercePaymentData\EcommercePaymentData.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

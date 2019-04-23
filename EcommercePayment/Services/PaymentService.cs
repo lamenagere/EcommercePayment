@@ -19,9 +19,36 @@ namespace EcommercePayment.Services
 
         }
 
-        public async Task<PaymentModel> GetPaymentAsync(int id)
+
+        public async Task<PaymentModel> GetPaymentAsync(int paymentId)
         {
-            var url = $"{paymentApiUrl}/{id}";
+            var url = $"{paymentApiUrl}/{paymentId}";
+
+            var payment = new PaymentModel();
+
+            HttpResponseMessage result;
+
+            try
+            {
+                result = await client.GetAsync(url);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            if (result.IsSuccessStatusCode)
+            {
+                payment = JsonConvert.DeserializeObject<PaymentModel>(await result.Content.ReadAsStringAsync());
+            }
+
+            return (payment);
+        }
+
+
+        public async Task<PaymentModel> GetPaymentAsync(string paymentGuid)
+        {
+            var url = $"{paymentApiUrl}/{paymentGuid}";
 
             var payment = new PaymentModel();
 
@@ -52,11 +79,6 @@ namespace EcommercePayment.Services
 
             HttpResponseMessage result;
             bool resultValidation = false;
-
-            //try
-            //{
-            //    result = await client.
-            //}
 
             try
             {

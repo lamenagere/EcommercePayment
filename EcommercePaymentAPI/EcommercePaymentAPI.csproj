@@ -12,7 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EcommerceCommon\EcommerceCommon.csproj" />
     <ProjectReference Include="..\EcommercePaymentData\EcommercePaymentData.csproj" />
+    <ProjectReference Include="..\EcommercePaymentServices\EcommercePaymentServices.csproj" />
   </ItemGroup>
 
 </Project>
