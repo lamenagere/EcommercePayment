@@ -36,7 +36,7 @@ namespace EcommercePaymentAPI.Controllers
             {
                 payment = await _context.Payments.FindAsync(id);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
@@ -59,7 +59,7 @@ namespace EcommercePaymentAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPayment(int id, Payment payment)
         {
-            if (id != payment.Id)
+            if (id != payment.id)
             {
                 return BadRequest();
             }
@@ -98,7 +98,7 @@ namespace EcommercePaymentAPI.Controllers
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPayment", new { id = payment.Id }, payment.Id);
+            return CreatedAtAction("GetPayment", new { id = payment.id }, payment.id);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace EcommercePaymentAPI.Controllers
             if (PaymentExists(id))
             {
                 payment = await _context.Payments.FindAsync(id);
-                if (payment.Id == 0)
+                if (payment.id == 0)
                 {
                     return NotFound();
                 }
@@ -137,9 +137,9 @@ namespace EcommercePaymentAPI.Controllers
         [Route("process")]
         public ActionResult ProcessPayment(Payment payment)
         {
-            if (ModelState.IsValid && PaymentExists(payment.Id))
+            if (ModelState.IsValid && PaymentExists(payment.id))
             {
-                var paymentPromess = _context.Payments.Single(p => p.Id == payment.Id);
+                var paymentPromess = _context.Payments.Single(p => p.id == payment.id);
                 if (paymentPromess.paymentAmount == 0)
                 {
                     return Forbid("The amount of this payment was not registered correctly in the promess... Check the payment promess you previously post to ~/api/payments");
@@ -160,7 +160,7 @@ namespace EcommercePaymentAPI.Controllers
                         var result = StatusCode(StatusCodes.Status500InternalServerError, ex);
                         return result;
                     }
-                    return CreatedAtAction("GetPayment", new { id = payment.Id }, payment.Id);
+                    return CreatedAtAction("GetPayment", new { id = payment.id }, payment.id);
                 }
                 else
                 {
@@ -178,7 +178,7 @@ namespace EcommercePaymentAPI.Controllers
         /// <returns></returns>
         private bool PaymentExists(int id)
         {
-            return _context.Payments.Any(e => e.Id == id);
+            return _context.Payments.Any(e => e.id == id);
         }
 
         [HttpGet("check/{id:int}")]

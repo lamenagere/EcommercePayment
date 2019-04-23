@@ -31,7 +31,7 @@ namespace EcommercePayment.Services
             {
                 result = await client.GetAsync(url);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -62,7 +62,7 @@ namespace EcommercePayment.Services
             {
                 result = await client.PostAsJsonAsync(url, payment);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

@@ -4,14 +4,16 @@ using EcommercePaymentData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EcommercePaymentData.Migrations
 {
     [DbContext(typeof(PaymentContext))]
-    partial class PaymentContextModelSnapshot : ModelSnapshot
+    [Migration("20190423111036_Ajout_Guid")]
+    partial class Ajout_Guid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,9 +23,11 @@ namespace EcommercePaymentData.Migrations
 
             modelBuilder.Entity("EcommercePaymentData.Entities.Payment", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Guid");
 
                     b.Property<string>("cardNumber");
 
@@ -33,13 +37,11 @@ namespace EcommercePaymentData.Migrations
 
                     b.Property<DateTime>("expiryDate");
 
-                    b.Property<string>("guid");
-
                     b.Property<bool>("isPaid");
 
                     b.Property<float>("paymentAmount");
 
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
                     b.ToTable("Payments");
                 });

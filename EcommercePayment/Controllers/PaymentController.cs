@@ -33,7 +33,7 @@ namespace EcommercePayment.Controllers
             {
                 payment = await service.GetPaymentAsync(paymentId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -44,7 +44,8 @@ namespace EcommercePayment.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Index(PaymentModel payment, string returnUrl, int paymentId)
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Index(PaymentModel payment, string returnUrl)
         {
 
             var client = new HttpClient();
@@ -56,12 +57,6 @@ namespace EcommercePayment.Controllers
                 return RedirectToAction("Validated", new { returnUrl = returnUrl });
             }
             return RedirectToAction("Rejected", new { returnUrl = returnUrl });
-        }
-
-        // GET: Payment/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
         }
 
         [HttpGet("validated/{returnUrl}")]
